@@ -12,19 +12,19 @@ router.use(bodyParser.json());
 // Endpoint to create a new task
 router.post('/tasks', async (req, res) => {
     const { model, system_prompt, messages } = req.body;
-    
+
     if (!model || !system_prompt || !messages) {
         return res.status(400).send({ error: 'Missing required fields: model, system_prompt, messages' });
     }
-    
+
     const newTask = {
-        model: 'ollama/llama3',
+        model: 'replicate/meta-llama-3.1-405b-instruct',
         system_prompt,
         messages,
         status: 'pending',
         createdAt: new Date()
     };
-    
+
     try {
         const result = await db.collection(TASKS_COLLECTION).insertOne(newTask);
         res.status(201).send({ message: 'Task created', taskId: result.insertedId });

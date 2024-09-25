@@ -8,12 +8,14 @@ let logged = false;
 async function process_next_task() {
     // get the next task from the queue
     const task = await collection.findOneAndUpdate(
-        { status: 'pending'
-        , system_prompt: {$exists: true}
-        , messages: {$exists: true} },
+        {
+            status: 'pending',
+            system_prompt: { $exists: true },
+            messages: { $exists: true }
+        },
         { $set: { status: 'processing' } }
     );
-    
+
     if (!task) {
         if (!logged) {
             console.log('No tasks in the queue, monitoring...');
@@ -22,10 +24,9 @@ async function process_next_task() {
         return;
     }
     logged = false;
-    
-    // process the task
-    const ai = new AI(task.model || 'ollama/llama3');
 
+    // process the task
+    const ai = new AI(task.model || 'replicate/meta-llama-3.1-405b-instruct');
 
     let response;
     try {
@@ -34,20 +35,17 @@ async function process_next_task() {
         console.error('Error processing task:', error);
         await collection.updateOne(
             { _id: task._id },
-            { $set: { status: 'failed', error: error.message }
-        });
+            { $set: { status: 'failed', error: error.message } }
+        );
         return;
     }
 
-
-    // update the task with the response    
+    // update the task with the response
     await collection.updateOne(
         { _id: task._id },
         { $set: { status: 'completed', response } }
     );
-    
 }
-
 
 let running = true;
 while (running) {

@@ -1,149 +1,153 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cosyworld Dashboard</title>
-    <style>
-        body {
-            font-family: 'Courier New', monospace;
-            background: #000;
-            color: #0f0;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        #metrics {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        .metric {
-            border: 1px solid #0f0;
-            padding: 15px;
-            text-align: center;
-        }
-        .metric-value {
-            font-size: 24px;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-        #chart {
-            flex-grow: 1;
-            border: 1px solid #0f0;
-        }
-    </style>
-</head>
-<body>
-    <h1>Cosyworld Dashboard</h1>
-    <div id="metrics">
-        <div class="metric">
-            <div>Total Messages</div>
-            <div id="messages" class="metric-value">0</div>
-        </div>
-        <div class="metric">
-            <div>Total Errors</div>
-            <div id="errors" class="metric-value">0</div>
-        </div>
-        <div class="metric">
-            <div>Total Actions</div>
-            <div id="actions" class="metric-value">0</div>
-        </div>
-        <div class="metric">
-            <div>Unique Statuses</div>
-            <div id="statuses" class="metric-value">0</div>
-        </div>
-    </div>
-    <canvas id="chart"></canvas>
-
-    <script>
-    (function() {
-        const ctx = document.getElementById('chart').getContext('2d');
-        let data = [];
-
-        function updateMetrics(stats) {
-            document.getElementById('messages').textContent = stats.messages;
-            document.getElementById('errors').textContent = stats.errors;
-            document.getElementById('actions').textContent = stats.actions;
-            document.getElementById('statuses').textContent = stats.statuses;
-        }
-
-        function drawChart() {
-            const width = ctx.canvas.width;
-            const height = ctx.canvas.height;
-            ctx.clearRect(0, 0, width, height);
-
-            if (data.length < 2) return;
-
-            const metrics = ['messages', 'errors', 'actions', 'statuses'];
-            const colors = ['#0f0', '#f00', '#ff0', '#0ff'];
-
-            metrics.forEach((metric, index) => {
-                const maxValue = Math.max(...data.map(d => d[metric]));
-                const minValue = Math.min(...data.map(d => d[metric]));
-
-                ctx.strokeStyle = colors[index];
-                ctx.beginPath();
-                data.forEach((point, i) => {
-                    const x = (i / (data.length - 1)) * width;
-                    const y = height - ((point[metric] - minValue) / (maxValue - minValue)) * height;
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
-                });
-                ctx.stroke();
-            });
-
-            // Add labels
-            ctx.fillStyle = '#0f0';
-            ctx.font = '12px Courier New';
-            ctx.fillText(new Date(data[0].timestamp).toLocaleTimeString(), 5, height - 5);
-            ctx.fillText(new Date(data[data.length-1].timestamp).toLocaleTimeString(), width - 70, height - 5);
-        }
-
-        async function fetchData() {
-            try {
-                const response = await fetch('/statistics');
-                const stats = await response.json();
-                
-                const newDataPoint = {
-                    timestamp: new Date(stats.timestamp),
-                    messages: stats.current.messages,
-                    errors: stats.current.errors,
-                    actions: stats.current.actions,
-                    statuses: Object.keys(stats.current.statuses).length
-                };
-
-                data.push(newDataPoint);
-                if (data.length > 20) data.shift();  // Keep last 20 data points
-
-                updateMetrics(newDataPoint);
-                drawChart();
-            } catch (error) {
-                console.error('Failed to fetch statistics:', error);
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Cosyworld Dashboard</title>
+        <style>
+            body {
+                font-family: 'Courier New', monospace;
+                background: #000;
+                color: #0f0;
+                margin: 0;
+                padding: 20px;
+                box-sizing: border-box;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
             }
-        }
+            h1 {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            #metrics {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-bottom: 20px;
+            }
+            .metric {
+                border: 1px solid #0f0;
+                padding: 15px;
+                text-align: center;
+            }
+            .metric-value {
+                font-size: 24px;
+                font-weight: bold;
+                margin-top: 10px;
+            }
+            #chart {
+                flex-grow: 1;
+                border: 1px solid #0f0;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Cosyworld Dashboard</h1>
+        <div id="metrics">
+            <div class="metric">
+                <div>Total Messages</div>
+                <div id="messages" class="metric-value">0</div>
+            </div>
+            <div class="metric">
+                <div>Total Errors</div>
+                <div id="errors" class="metric-value">0</div>
+            </div>
+            <div class="metric">
+                <div>Total Actions</div>
+                <div id="actions" class="metric-value">0</div>
+            </div>
+            <div class="metric">
+                <div>Unique Statuses</div>
+                <div id="statuses" class="metric-value">0</div>
+            </div>
+        </div>
+        <canvas id="chart"></canvas>
 
-        function resizeCanvas() {
-            ctx.canvas.width = ctx.canvas.offsetWidth;
-            ctx.canvas.height = ctx.canvas.offsetHeight;
-            drawChart();
-        }
+        <script>
+            (function () {
+                const ctx = document.getElementById('chart').getContext('2d');
+                let data = [];
 
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+                function updateMetrics(stats) {
+                    document.getElementById('messages').textContent = stats.messages;
+                    document.getElementById('errors').textContent = stats.errors;
+                    document.getElementById('actions').textContent = stats.actions;
+                    document.getElementById('statuses').textContent = stats.statuses;
+                }
 
-        // Initial fetch and then every 5 seconds
-        fetchData();
-        setInterval(fetchData, 5000);
-    })();
-    </script>
-</body>
+                function drawChart() {
+                    const width = ctx.canvas.width;
+                    const height = ctx.canvas.height;
+                    ctx.clearRect(0, 0, width, height);
+
+                    if (data.length < 2) return;
+
+                    const metrics = ['messages', 'errors', 'actions', 'statuses'];
+                    const colors = ['#0f0', '#f00', '#ff0', '#0ff'];
+
+                    metrics.forEach((metric, index) => {
+                        const maxValue = Math.max(...data.map((d) => d[metric]));
+                        const minValue = Math.min(...data.map((d) => d[metric]));
+
+                        ctx.strokeStyle = colors[index];
+                        ctx.beginPath();
+                        data.forEach((point, i) => {
+                            const x = (i / (data.length - 1)) * width;
+                            const y = height - ((point[metric] - minValue) / (maxValue - minValue)) * height;
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        });
+                        ctx.stroke();
+                    });
+
+                    // Add labels
+                    ctx.fillStyle = '#0f0';
+                    ctx.font = '12px Courier New';
+                    ctx.fillText(new Date(data[0].timestamp).toLocaleTimeString(), 5, height - 5);
+                    ctx.fillText(
+                        new Date(data[data.length - 1].timestamp).toLocaleTimeString(),
+                        width - 70,
+                        height - 5
+                    );
+                }
+
+                async function fetchData() {
+                    try {
+                        const response = await fetch('/statistics');
+                        const stats = await response.json();
+
+                        const newDataPoint = {
+                            timestamp: new Date(stats.timestamp),
+                            messages: stats.current.messages,
+                            errors: stats.current.errors,
+                            actions: stats.current.actions,
+                            statuses: Object.keys(stats.current.statuses).length
+                        };
+
+                        data.push(newDataPoint);
+                        if (data.length > 20) data.shift(); // Keep last 20 data points
+
+                        updateMetrics(newDataPoint);
+                        drawChart();
+                    } catch (error) {
+                        console.error('Failed to fetch statistics:', error);
+                    }
+                }
+
+                function resizeCanvas() {
+                    ctx.canvas.width = ctx.canvas.offsetWidth;
+                    ctx.canvas.height = ctx.canvas.offsetHeight;
+                    drawChart();
+                }
+
+                window.addEventListener('resize', resizeCanvas);
+                resizeCanvas();
+
+                // Initial fetch and then every 5 seconds
+                fetchData();
+                setInterval(fetchData, 5000);
+            })();
+        </script>
+    </body>
 </html>

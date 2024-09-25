@@ -5,7 +5,6 @@ let lastCacheTime = null;
 let cachedLocations = null;
 
 export const getLocations = async () => {
-
     if (lastCacheTime && Date.now() - lastCacheTime < 5000) {
         return cachedLocations;
     }
@@ -17,23 +16,17 @@ export const getLocations = async () => {
 };
 
 export const initializeAvatars = async () => {
-    const [locations, allAvatars] = await Promise.all([
-        getLocations(),
-        fetchJSON(AVATARS_API)
-    ]);
+    const [locations, allAvatars] = await Promise.all([getLocations(), fetchJSON(AVATARS_API)]);
 
-    return allAvatars
-        .filter(avatar => avatar.owner === 'host')
-        .map(avatar => initializeAvatar(avatar, locations));
+    return allAvatars.filter((avatar) => avatar.owner === 'host').map((avatar) => initializeAvatar(avatar, locations));
 };
 
 const initializeAvatar = (avatar, locations) => ({
     ...avatar,
-    location: locations.find(loc => loc.channelName === avatar.location) || locations[0],
+    location: locations.find((loc) => loc.channelName === avatar.location) || locations[0],
     messageCache: [],
     lastProcessedMessageId: null,
-    remember: [...new Set([...(avatar.remember || []), avatar.location])]
-        .slice(-5)
+    remember: [...new Set([...(avatar.remember || []), avatar.location])].slice(-5)
 });
 
 export const updateAvatarLocation = async (avatar) => {
@@ -43,7 +36,7 @@ export const updateAvatarLocation = async (avatar) => {
     }
 
     console.log(`${avatar.emoji} ${avatar.name} is now in ${avatar.location.channelName}.`);
-    
+
     avatar.remember = updateRememberedLocations(avatar);
     console.log(avatar.remember);
 
@@ -54,7 +47,7 @@ export const updateAvatarLocation = async (avatar) => {
     }
 };
 
-const updateRememberedLocations = ({ remember, location }) => 
+const updateRememberedLocations = ({ remember, location }) =>
     [...new Set([...remember, location.channelName])].slice(-5);
 
 export const updateAvatarOnServer = async (avatar) => {
@@ -63,9 +56,9 @@ export const updateAvatarOnServer = async (avatar) => {
     }
 
     const url = `${AVATARS_API}/${avatar._id}`;
-    const body = JSON.stringify({ 
-        location: avatar.location?.name, 
-        remember: avatar.remember 
+    const body = JSON.stringify({
+        location: avatar.location?.name,
+        remember: avatar.remember
     });
 
     try {

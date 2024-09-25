@@ -1,13 +1,11 @@
-import { MESSAGES_API } from "../config.js";
-import { fetchJSON, createURLWithParams } from "./utils.js";
-import { getLocations } from "./avatar.js";
-import { handleResponse } from "./response.js";
+import { MESSAGES_API } from '../config.js';
+import { fetchJSON, createURLWithParams } from './utils.js';
+import { getLocations } from './avatar.js';
+import { handleResponse } from './response.js';
 
-export const getMessages = (location) =>
-    fetchJSON(createURLWithParams(MESSAGES_API, { location }));
+export const getMessages = (location) => fetchJSON(createURLWithParams(MESSAGES_API, { location }));
 
-export const getMentions = (name, since) =>
-    fetchJSON(createURLWithParams(`${MESSAGES_API}/mention`, { name, since }));
+export const getMentions = (name, since) => fetchJSON(createURLWithParams(`${MESSAGES_API}/mention`, { name, since }));
 
 export async function processMessagesForAvatar(avatar) {
     try {
@@ -21,7 +19,6 @@ export async function processMessagesForAvatar(avatar) {
 
         const conversation = buildConversation(avatar, messages, locations);
         if (shouldRespond(conversation)) await handleResponse(avatar, conversation, locations);
-
     } catch (error) {
         console.error(`Error processing messages for ${avatar.name}:`, error);
     }
@@ -38,7 +35,7 @@ async function fetchMessages(avatar, locations) {
         const currentLocation = avatar.location.channelName;
 
         // Find the channelId for the avatar's current location
-        const location = locations.find(loc => loc.channelName === currentLocation);
+        const location = locations.find((loc) => loc.channelName === currentLocation);
         if (!location) {
             throw new Error(`Location ${currentLocation} not found for avatar ${avatar.name}`);
         }
@@ -61,11 +58,12 @@ async function fetchMessages(avatar, locations) {
  * @param {Array} locations - The list of all available locations.
  * @returns {Array} The formatted conversation context.
  */
-const buildConversation = (avatar, messages, locations) => 
-    messages.map(message => {
+const buildConversation = (avatar, messages, locations) =>
+    messages.map((message) => {
         const author = message.author.displayName || message.author.username;
-        const location = locations.find(loc => loc.channelId === message.channelId)?.channelName || 'unknown location';
-        const isBot = message.author.discriminator === "0000";
+        const location =
+            locations.find((loc) => loc.channelId === message.channelId)?.channelName || 'unknown location';
+        const isBot = message.author.discriminator === '0000';
 
         return author.includes(avatar.name)
             ? { bot: isBot, role: 'assistant', content: message.content }
@@ -79,7 +77,5 @@ const buildConversation = (avatar, messages, locations) =>
  */
 const shouldRespond = (conversation) => {
     const recentMessages = conversation.slice(-5);
-    return recentMessages.some(message => !message.bot) &&
-        conversation[conversation.length - 1]?.role === 'user';
+    return recentMessages.some((message) => !message.bot) && conversation[conversation.length - 1]?.role === 'user';
 };
-

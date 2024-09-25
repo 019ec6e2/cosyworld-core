@@ -4,7 +4,9 @@
  * @returns {string} The cleaned string.
  */
 export function cleanString(input) {
-    return input.trim().replace(/^["*]|["*]$/g, '');
+    return input
+        .trim()
+        .replace(/^["*]|["*]$/g, '');
 }
 
 /**
@@ -13,7 +15,9 @@ export function cleanString(input) {
  * @returns {Promise} A promise that resolves after the specified delay.
  */
 function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) =>
+        setTimeout(resolve, ms)
+    );
 }
 
 /**
@@ -24,7 +28,12 @@ function delay(ms) {
  * @param {number} [factor=2] - Exponential factor for backoff.
  * @returns {Function} A wrapped function that will be retried on failure.
  */
-export function retry(fn, maxRetries, baseDelay, factor = 2) {
+export function retry(
+    fn,
+    maxRetries,
+    baseDelay,
+    factor = 2
+) {
     return async (...args) => {
         let retries = 0;
         while (retries < maxRetries) {
@@ -33,12 +42,22 @@ export function retry(fn, maxRetries, baseDelay, factor = 2) {
             } catch (error) {
                 retries++;
                 if (retries > maxRetries) {
-                    console.error(`Max retries (${maxRetries}) exceeded. Last error:`, error);
+                    console.error(
+                        `Max retries (${maxRetries}) exceeded. Last error:`,
+                        error
+                    );
                     throw error;
                 }
-                const delay = baseDelay * Math.pow(factor, retries - 1);
-                console.warn(`Retry ${retries}/${maxRetries} after ${delay}ms. Error:`, error.message);
-                await new Promise(resolve => setTimeout(resolve, delay));
+                const delay =
+                    baseDelay *
+                    Math.pow(factor, retries - 1);
+                console.warn(
+                    `Retry ${retries}/${maxRetries} after ${delay}ms. Error:`,
+                    error.message
+                );
+                await new Promise((resolve) =>
+                    setTimeout(resolve, delay)
+                );
             }
         }
     };
@@ -52,7 +71,15 @@ export function retry(fn, maxRetries, baseDelay, factor = 2) {
  */
 export function withTimeout(promise, ms) {
     const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`Operation timed out after ${ms}ms`)), ms)
+        setTimeout(
+            () =>
+                reject(
+                    new Error(
+                        `Operation timed out after ${ms}ms`
+                    )
+                ),
+            ms
+        )
     );
     return Promise.race([promise, timeout]);
 }
@@ -65,17 +92,29 @@ export function withTimeout(promise, ms) {
  * @param {number} backoff - Initial backoff delay in milliseconds.
  * @returns {Promise<Object>} The parsed JSON data.
  */
-async function fetchWithRetry(url, options, retries = 3, backoff = 1000) {
+async function fetchWithRetry(
+    url,
+    options,
+    retries = 3,
+    backoff = 1000
+) {
     for (let i = 0; i < retries; i++) {
         try {
-            const response = await fetch(url, options);
+            const response = await fetch(
+                url,
+                options
+            );
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(
+                    `HTTP error! status: ${response.status}`
+                );
             }
             return await response.json();
         } catch (error) {
             if (i === retries - 1) throw error;
-            console.warn(`Attempt ${i + 1} failed. Retrying in ${backoff}ms...`);
+            console.warn(
+                `URL: ${url} - Attempt ${i + 1} failed. Retrying in ${backoff}ms...`
+            );
             await delay(backoff);
             backoff *= 2; // Exponential backoff
         }
@@ -90,14 +129,31 @@ async function fetchWithRetry(url, options, retries = 3, backoff = 1000) {
  * @param {number} [backoff=1000] - Initial backoff delay in milliseconds.
  * @returns {Promise<Object>} The response JSON data.
  */
-export const postJSON = retry(async (url, data, retries = 3, backoff = 1000) => {
-    const options = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    };
-    return fetchWithRetry(url, options, retries, backoff);
-}, 3, 1000);
+export const postJSON = retry(
+    async (
+        url,
+        data,
+        retries = 3,
+        backoff = 1000
+    ) => {
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type':
+                    'application/json',
+            },
+            body: JSON.stringify(data),
+        };
+        return fetchWithRetry(
+            url,
+            options,
+            retries,
+            backoff
+        );
+    },
+    3,
+    1000
+);
 
 /**
  * Fetches JSON data from a URL with retry.
@@ -106,14 +162,26 @@ export const postJSON = retry(async (url, data, retries = 3, backoff = 1000) => 
  * @param {number} [backoff=1000] - Initial backoff delay in milliseconds.
  * @returns {Promise<Object>} The parsed JSON data or an empty array if failed.
  */
-export const fetchJSON = retry(async (url, retries = 5, backoff = 1000) => {
-    try {
-        return await fetchWithRetry(url, {}, retries, backoff);
-    } catch (error) {
-        console.error(`Failed to fetch: ${url}`, error);
-        return [];
-    }
-}, 5, 1000);
+export const fetchJSON = retry(
+    async (url, retries = 5, backoff = 1000) => {
+        try {
+            return await fetchWithRetry(
+                url,
+                {},
+                retries,
+                backoff
+            );
+        } catch (error) {
+            console.error(
+                `Failed to fetch: ${url}`,
+                error
+            );
+            return [];
+        }
+    },
+    5,
+    1000
+);
 
 /**
  * Creates a URL with query parameters.
@@ -121,15 +189,26 @@ export const fetchJSON = retry(async (url, retries = 5, backoff = 1000) => {
  * @param {Object} [params={}] - The query parameters.
  * @returns {string} The complete URL with query parameters.
  */
-export function createURLWithParams(baseURL, params = {}) {
+export function createURLWithParams(
+    baseURL,
+    params = {}
+) {
     if (!baseURL) {
         throw new Error('baseURL is required');
     }
     const url = new URL(baseURL);
-    Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-            url.searchParams.append(key, value);
+    Object.entries(params).forEach(
+        ([key, value]) => {
+            if (
+                value !== undefined &&
+                value !== null
+            ) {
+                url.searchParams.append(
+                    key,
+                    value
+                );
+            }
         }
-    });
+    );
     return url.toString();
 }

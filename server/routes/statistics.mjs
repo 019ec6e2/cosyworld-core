@@ -10,42 +10,34 @@ router.get('/', async (req, res) => {
             {
                 $group: {
                     _id: null,
-                    totalMessages: { 
-                        $sum: { 
-                            $cond: [
-                                { $isArray: "$messages" },
-                                { $size: "$messages" },
-                                0
-                            ]
-                        } 
+                    totalMessages: {
+                        $sum: {
+                            $cond: [{ $isArray: '$messages' }, { $size: '$messages' }, 0]
+                        }
                     },
-                    totalErrors: { 
-                        $sum: { 
-                            $cond: [{ $eq: ["$status", "failed"] }, 1, 0] 
-                        } 
+                    totalErrors: {
+                        $sum: {
+                            $cond: [{ $eq: ['$status', 'failed'] }, 1, 0]
+                        }
                     },
                     totalActions: { $sum: 1 },
-                    statusCounts: { 
-                        $push: { 
-                            k: { 
-                                $cond: [
-                                    { $eq: ["$status", null] },
-                                    "null",
-                                    { $ifNull: ["$status", "unknown"] }
-                                ]
-                            }, 
+                    statusCounts: {
+                        $push: {
+                            k: {
+                                $cond: [{ $eq: ['$status', null] }, 'null', { $ifNull: ['$status', 'unknown'] }]
+                            },
                             v: 1
-                        } 
+                        }
                     }
                 }
             },
             {
                 $project: {
                     _id: 0,
-                    messages: "$totalMessages",
-                    errors: "$totalErrors",
-                    actions: "$totalActions",
-                    statuses: { $arrayToObject: "$statusCounts" }
+                    messages: '$totalMessages',
+                    errors: '$totalErrors',
+                    actions: '$totalActions',
+                    statuses: { $arrayToObject: '$statusCounts' }
                 }
             }
         ];
@@ -57,14 +49,16 @@ router.get('/', async (req, res) => {
         }
 
         // Get the latest timestamp
-        const latestTimestamp = await db.collection('requests').find({}, { projection: { createdAt: 1 } })
+        const latestTimestamp = await db
+            .collection('requests')
+            .find({}, { projection: { createdAt: 1 } })
             .sort({ createdAt: -1 })
             .limit(1)
             .next();
 
         const response = {
             current: stats,
-            timestamp: latestTimestamp ? latestTimestamp.createdAt : new Date(),
+            timestamp: latestTimestamp ? latestTimestamp.createdAt : new Date()
         };
 
         res.status(200).send(response);
@@ -88,35 +82,27 @@ router.get('/history', async (req, res) => {
             },
             {
                 $group: {
-                    _id: { 
-                        $dateToString: { 
-                            format: "%Y-%m-%d %H:%M", 
-                            date: "$createdAt" 
-                        } 
+                    _id: {
+                        $dateToString: {
+                            format: '%Y-%m-%d %H:%M',
+                            date: '$createdAt'
+                        }
                     },
-                    messages: { 
-                        $sum: { 
-                            $cond: [
-                                { $isArray: "$messages" },
-                                { $size: "$messages" },
-                                0
-                            ]
-                        } 
+                    messages: {
+                        $sum: {
+                            $cond: [{ $isArray: '$messages' }, { $size: '$messages' }, 0]
+                        }
                     },
-                    errors: { 
-                        $sum: { 
-                            $cond: [{ $eq: ["$status", "failed"] }, 1, 0] 
-                        } 
+                    errors: {
+                        $sum: {
+                            $cond: [{ $eq: ['$status', 'failed'] }, 1, 0]
+                        }
                     },
                     actions: { $sum: 1 },
-                    statuses: { 
-                        $addToSet: { 
-                            $cond: [
-                                { $eq: ["$status", null] },
-                                "null",
-                                { $ifNull: ["$status", "unknown"] }
-                            ]
-                        } 
+                    statuses: {
+                        $addToSet: {
+                            $cond: [{ $eq: ['$status', null] }, 'null', { $ifNull: ['$status', 'unknown'] }]
+                        }
                     }
                 }
             },
@@ -126,11 +112,11 @@ router.get('/history', async (req, res) => {
             {
                 $project: {
                     _id: 0,
-                    timestamp: "$_id",
+                    timestamp: '$_id',
                     messages: 1,
                     errors: 1,
                     actions: 1,
-                    statuses: { $size: "$statuses" }
+                    statuses: { $size: '$statuses' }
                 }
             }
         ];

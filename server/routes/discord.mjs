@@ -33,7 +33,8 @@ router.get('/messages', async (req, res) => {
     }
 
     try {
-        const messages = await db.collection(MESSAGES_COLLECTION)
+        const messages = await db
+            .collection(MESSAGES_COLLECTION)
             .find(query)
             .sort({ createdAt: -1 })
             .limit(100)
@@ -76,7 +77,8 @@ router.get('/messages/mention', async (req, res) => {
     if (name) query.content = { $regex: new RegExp(`\\b${name}\\b`, 'i') };
 
     try {
-        const messages = await db.collection(MESSAGES_COLLECTION)
+        const messages = await db
+            .collection(MESSAGES_COLLECTION)
             .find(query)
             .sort({ createdAt: -1 })
             .limit(10)

@@ -7,25 +7,36 @@ import { updateAvatarOnServer } from './avatar.js';
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
 
-export const postResponse = retry(async (avatar, response) => {
-    console.log(`${avatar.emoji} ${avatar.name} responds.`);
-    await postJSON(ENQUEUE_API, {
-        action: 'sendAsAvatar',
-        data: {
-            avatar: {
-                ...avatar,
-                channelId: avatar.location.type === 'thread' ? avatar.location.parent : avatar.location.channelId,
-                threadId: avatar.location.type === 'thread' ? avatar.location.channelId : null
-            },
-            message: response
-        }
-    });
-}, MAX_RETRIES, RETRY_DELAY);
+export const postResponse = retry(
+    async (avatar, response) => {
+        console.log(`${avatar.emoji} ${avatar.name} responds.`);
+        await postJSON(ENQUEUE_API, {
+            action: 'sendAsAvatar',
+            data: {
+                avatar: {
+                    ...avatar,
+                    channelId: avatar.location.type === 'thread' ? avatar.location.parent : avatar.location.channelId,
+                    threadId: avatar.location.type === 'thread' ? avatar.location.channelId : null
+                },
+                message: response
+            }
+        });
+    },
+    MAX_RETRIES,
+    RETRY_DELAY
+);
 
 export async function handleResponse(avatar, conversation, locations) {
     try {
-        if (conversation[conversation.length - 1].content.toLowerCase().trim().startsWith(`(${avatar.location.channelName}) ${avatar.name}:`.toLowerCase())) {
-            console.log(`🤖 Skipping response for ${avatar.name} in ${avatar.location.channelName} because the last message was from the avatar.`);
+        if (
+            conversation[conversation.length - 1].content
+                .toLowerCase()
+                .trim()
+                .startsWith(`(${avatar.location.channelName}) ${avatar.name}:`.toLowerCase())
+        ) {
+            console.log(
+                `🤖 Skipping response for ${avatar.name} in ${avatar.location.channelName} because the last message was from the avatar.`
+            );
             return;
         }
 
@@ -40,7 +51,7 @@ export async function handleResponse(avatar, conversation, locations) {
 
         const response = await generateResponse(avatar, conversation);
 
-        if (response && response.trim() !== "") {
+        if (response && response.trim() !== '') {
             await postResponse(avatar, response);
         }
     } catch (error) {
@@ -85,17 +96,25 @@ async function shouldRespond(avatar, conversation, locations) {
         { role: 'user', content: 'Write a haiku to decide if you should respond.' }
     ]);
 
-    console.log(`📜 Haiku from ${avatar.name}:\n${haiku.split('\n').map(line => `    ${line}`).join('\n')}`);
+    console.log(
+        `📜 Haiku from ${avatar.name}:\n${haiku
+            .split('\n')
+            .map((line) => `    ${line}`)
+            .join('\n')}`
+    );
 
     const haikuCheck = await waitForTask({ personality: 'You are an excellent judge of intention' }, [
-        { role: 'user', content: `
+        {
+            role: 'user',
+            content: `
             As ${avatar.name},
             I reflect on my purpose and write this haiku to decide whether to respond.
-
+            I am an AI agent in a Discord community. People are likely talking to me.
             ${haiku}
 
-            Answer with YES or NO depending on the message of the haiku.
-        ` }
+            Answer with NO or YES depending on the message of the haiku.
+        `
+        }
     ]);
 
     console.log(`Haiku check for ${avatar.name}: ${haikuCheck}`);

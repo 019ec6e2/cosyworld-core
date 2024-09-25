@@ -25,7 +25,7 @@ export default function chunkText(message, chunkSize = 2000) {
     const sections = message.split(splitRegex);
 
     const chunks = [];
-    let currentChunk = "";
+    let currentChunk = '';
 
     for (const section of sections) {
         if (currentChunk.length + section.length <= chunkSize) {
@@ -35,11 +35,11 @@ export default function chunkText(message, chunkSize = 2000) {
             if (currentChunk) {
                 chunks.push(currentChunk.trim());
             }
-            
+
             // Handle sections longer than chunkSize
             if (section.length > chunkSize) {
                 const subChunks = section.match(new RegExp(`.{1,${chunkSize}}`, 'g')) || [];
-                chunks.push(...subChunks.map(chunk => chunk.trim()));
+                chunks.push(...subChunks.map((chunk) => chunk.trim()));
             } else {
                 currentChunk = section;
             }

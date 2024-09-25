@@ -6,7 +6,6 @@ import { ObjectId } from 'mongodb';
 const router = express.Router();
 const collectionName = 'avatars';
 
-
 // Route to get all avatars
 router.get(`/`, async (req, res) => {
     try {
@@ -47,8 +46,6 @@ router.get(`/:id`, async (req, res) => {
     }
 });
 
-
-
 // Route to update a avatar (PATCH)
 router.patch(`/:id`, async (req, res) => {
     const { id } = req.params;
@@ -59,10 +56,7 @@ router.patch(`/:id`, async (req, res) => {
     }
 
     try {
-        const result = await db.collection(collectionName).updateOne(
-            { _id: new ObjectId(id) },
-            { $set: updateData }
-        );
+        const result = await db.collection(collectionName).updateOne({ _id: new ObjectId(id) }, { $set: updateData });
 
         if (result.matchedCount === 0) {
             return res.status(404).send({ error: 'Avatar not found' });
