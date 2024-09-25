@@ -10,7 +10,7 @@ import { postJSON, fetchJSON } from './utils.js';
 export async function createAiTask(system_prompt, messages) {
     const task = {
         action: 'ai',
-        model: 'replicate/meta-llama-3.1-405b-instruct',
+        model: 'claude-3-haiku-20240307',
         system_prompt,
         messages
     };
@@ -74,6 +74,7 @@ export function pollTaskCompletion(taskId) {
 export async function waitForTask(avatar, conversation) {
     let taskId;
     try {
+        console.log(conversation);
         taskId = await createAiTask(avatar.personality, conversation);
     } catch (error) {
         console.error(`Failed to create task for ${avatar.name}:`, error);

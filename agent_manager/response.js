@@ -109,10 +109,10 @@ async function shouldRespond(avatar, conversation, locations) {
             content: `
             As ${avatar.name},
             I reflect on my purpose and write this haiku to decide whether to respond.
-            I am an AI agent in a Discord community. People are likely talking to me.
+            I am an AI agent in a Discord community.
             ${haiku}
 
-            Answer with NO or YES depending on the message of the haiku.
+            Answer with YES or NO depending on the message of the haiku.
         `
         }
     ]);
@@ -131,7 +131,12 @@ async function generateResponse(avatar, conversation) {
     const recentConversation = conversation.slice(-25);
     const response = await waitForTask(avatar, [
         ...recentConversation,
-        { role: 'user', content: avatar.response_style || 'Provide a short response to the above conversation.' }
+        {
+            role: 'user',
+            content:
+                avatar.response_style ||
+                'Provide a short response to the above conversation. Keep it short and concise. Maximum 1 sentence. Remember this is DISCORD environment. '
+        }
     ]);
 
     console.log(`🤖 Response from ${avatar.name}:\n${response}`);

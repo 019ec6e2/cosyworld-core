@@ -26,25 +26,19 @@ async function process_next_task() {
     logged = false;
 
     // process the task
-    const ai = new AI(task.model || 'replicate/meta-llama-3.1-405b-instruct');
+    const ai = new AI(task.model);
 
     let response;
     try {
         response = await ai.generateResponse(task.system_prompt, task.messages);
     } catch (error) {
         console.error('Error processing task:', error);
-        await collection.updateOne(
-            { _id: task._id },
-            { $set: { status: 'failed', error: error.message } }
-        );
+        await collection.updateOne({ _id: task._id }, { $set: { status: 'failed', error: error.message } });
         return;
     }
 
     // update the task with the response
-    await collection.updateOne(
-        { _id: task._id },
-        { $set: { status: 'completed', response } }
-    );
+    await collection.updateOne({ _id: task._id }, { $set: { status: 'completed', response } });
 }
 
 let running = true;

@@ -1,4 +1,5 @@
 import ReplicateService from './ai/replicate.mjs';
+import AnthropicService from './ai/anthropic.mjs';
 
 class AI {
     constructor(model) {
@@ -9,6 +10,9 @@ class AI {
     initializeService() {
         switch (this.model) {
             case 'openai/gpt-3.5-turbo':
+            case 'claude-3-haiku-20240307':
+                this.service = new AnthropicService();
+                break;
             //this.service = new OpenAIService();
             //break;
             case 'ollama':
